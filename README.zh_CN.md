@@ -1,104 +1,201 @@
-# Nest 模板（NestJS + Express）
+# Nest Template
 
-一个面向生产的后端模板：NestJS + Express。内置 Prisma ORM、JWT 鉴权、BullMQ 队列、基于 Redis 的缓存/限流、Winston 日志、PM2 部署、Swagger 文档、Resend 邮件。
+[English](./README.md) | 简体中文
 
-## 特性
-- Express 优先，全局管线（守卫/拦截器/管道/过滤器）
-- JWT 访问/刷新令牌，基于角色的守卫与装饰器
-- Prisma 模型与生成客户端，推荐仓储模式
-- BullMQ 队列与处理器/worker
-- Redis 缓存与限流存储
-- Winston 日志每日轮转至 `logs/**`
-- Swagger 支持 URI 版本与全局前缀
-- 文件上传（已预留支持）
+一个面向真实部署场景的 NestJS 11 + Express 后端模板。仓库内已经集成 Prisma、JWT 鉴权、Redis 缓存与限流、BullMQ 队列、定时任务、Cloudflare R2 文件存储、Resend 邮件、Winston 日志、Swagger 和 PM2 部署能力。
+
+## 亮点
+
+- 基于 NestJS 11 + Express 5 的项目结构
+- 内置全局鉴权、角色守卫、参数校验、响应整形和异常过滤
+- Prisma 7 + MariaDB Adapter，附带生成的枚举和类型
+- JWT 访问令牌 + 签名刷新令牌 Cookie 流程
+- 登录集成 Cloudflare Turnstile 人机校验
+- Cloudflare R2 文件服务，支持游标分页查询和删除
+- Redis 缓存、限流、Redlock 与 BullMQ 集成
+- 定时执行 MySQL 备份并上传到 R2
+- Swagger 文档和 Winston 每日日志轮转
 
 ## 环境要求
-- Node `>=22.20.0`
-- 推荐使用 pnpm
-- 需要 Redis（缓存/限流）
-- 数据库见 `src/core/prisma/schema.prisma`
 
-## 快速开始
-```zsh
-pnpm install
-pnpm prisma:dev   # 开发迁移并生成 Prisma 客户端
-pnpm start        # 启动开发服务（Express）
+- Node >=24.14.0
+- pnpm
+- MySQL 或 MariaDB
+- Redis
+- Cloudflare Turnstile 与 R2 凭证
+- Resend 邮件 API Key
+- 如果保留内置备份任务，需要确保 `mysqldump` 在 PATH 中可用
+
+## 项目结构
+
+```text
+src/
+	app.module.ts               # 全局模块装配
+	core/                       # 启动、配置、prisma、jwt、队列、定时任务、日志
+	common/                     # 共享常量、DTO、守卫
+	modules/
+		auth/                     # 验证码、登录、刷新、登出
+		user/                     # 用户资料、密码、头像、后台管理
+		file/                     # R2 文件与目录管理
+	tools/                      # 通用工具方法
 ```
 
-若 `SWAGGER_ON=true`，启动横幅会显示 Swagger 地址。
+## 环境文件
 
-## 构建与本地生产运行
+配置模块会先加载 `.env.${NODE_ENV}`，再加载 `.env`。
+
+本地开发建议这样准备：
+
+```zsh
+cp .env.example .env
+cp .env.development.example .env.development
+```
+
+生产环境建议这样准备：
+
+```zsh
+cp .env.example .env
+cp .env.production.example .env.production
+```
+
+## 快速开始
+
+```zsh
+pnpm install
+cp .env.example .env
+cp .env.development.example .env.development
+pnpm prisma:dev
+pnpm start
+```
+
+当 `SWAGGER_ON=true` 时，启动日志会直接打印完整的 Swagger 地址。
+
+## 常用脚本
+
+| 脚本 | 说明 |
+| --- | --- |
+| `pnpm start` | 监听模式启动 Nest 开发服务 |
+| `pnpm build` | 构建生产产物 |
+| `pnpm production` | 用生产模式运行编译后的应用 |
+| `pnpm prisma:dev` | 执行开发迁移并重新生成 Prisma Client |
+| `pnpm prisma:deploy` | 在生产环境应用 Prisma 迁移 |
+| `pnpm prisma:reset` | 重置开发数据库 |
+| `pnpm type-check` | 按构建配置执行 TypeScript 类型检查 |
+| `pnpm lint` | 运行 ESLint 并自动修复 |
+| `pnpm prettier` | 格式化整个仓库 |
+| `pnpm pm2` | 使用 `pm2.config.json` 启动或重启 |
+| `pnpm deploy-setup` | 初始化远程 PM2 部署目标 |
+| `pnpm deploy` | 强制执行 PM2 部署 |
+| `pnpm commit` | 打开规范化提交向导 |
+| `pnpm husky-install` | 重新生成 Husky 钩子 |
+
+## 关键配置
+
+环境变量校验定义在 `src/core/config/config.config.ts`。
+
+应用基础配置：
+
+- `APP_NAME`
+- `APP_PORT`
+- `APP_PREFIX`
+- `APP_VERSION`
+- `NODE_ENV`
+
+Swagger：
+
+- `SWAGGER_ON`
+- `SWAGGER_PATH`
+- `SWAGGER_TITLE`
+- `SWAGGER_DESCRIPTION`
+- `SWAGGER_VERSION`
+
+安全与鉴权：
+
+- `COOKIE_SECRET`
+- `JWT_SECRET`
+- `JWT_ACCESS_EXPIRES_IN`
+- `JWT_REFRESH_EXPIRES_IN`
+- `CLOUDFLARE_TURNSTILE_SECRET`
+
+对象存储：
+
+- `ASSETS_PREFIX`
+- `CLOUDFLARE_ACCOUNT_ID`
+- `CLOUDFLARE_R2_ACCESS_KEY`
+- `CLOUDFLARE_R2_SECRET_KEY`
+- `CLOUDFLARE_R2_BUCKET_NAME`
+- `CLOUDFLARE_R2_ENDPOINT`
+
+数据库与 Redis：
+
+- `DB_HOST`
+- `DB_PORT`
+- `DB_USERNAME`
+- `DB_PASSWORD`
+- `DB_NAME`
+- `DB_URL`
+- `REDIS_HOST`
+- `REDIS_PORT`
+- `REDIS_PASSWORD`
+- `REDIS_DB`
+- `REDIS_CACHE_TTL`
+- `REDIS_URL`
+- `THROTTLE_TTL`
+- `THROTTLE_LIMIT`
+
+邮件：
+
+- `MAIL_API_KEY`
+- `MAIL_FROM`
+
+具体示例值请以 `.env.example`、`.env.development.example` 和 `.env.production.example` 为准。
+
+## 内置模块
+
+认证模块：
+
+- `POST /auth/code`：发送登录、注册、重置密码或联系方式变更验证码
+- `POST /auth/login`：邮箱 + 密码 + 6 位验证码 + Turnstile 校验
+- `POST /auth/refresh`：轮换刷新令牌并返回新的访问令牌
+- `POST /auth/logout`：注销当前登录会话
+
+用户模块：
+
+- `POST /users/`：创建用户
+- `GET /users/profile`：获取当前用户资料
+- `PATCH /users/password`、`PATCH /users/email`、`PATCH /users/profile`：更新当前用户信息
+- `PATCH /users/avatar`：以内存方式处理 multipart 头像上传
+- 提供仅管理员可用的用户列表、更新和删除接口
+
+文件模块：
+
+- 仅管理员可调用的单文件删除和整目录删除接口
+- 提供文件与目录的游标分页查询接口
+
+## 运行说明
+
+- 全局守卫通过 `APP_GUARD` 注册，因此默认所有路由都需要鉴权，除非显式使用 `@SkipAuth()`。
+- 刷新令牌保存在签名的 httpOnly Cookie 中。生产环境使用 `SameSite=None` 与 `Secure=true`，开发环境使用 `SameSite=Lax`。
+- `WorkersModule` 默认已经引入，因此 BullMQ 的 worker 处理器会和主应用跑在同一进程；如果你要拆分独立 worker，需要单独做入口。
+- MySQL 备份任务每 12 小时执行一次，并把导出的 SQL 上传到 Cloudflare R2。如果你不希望应用进程内执行备份，需要移除或按环境条件禁用该任务。
+
+## 部署
+
+本地以生产模式运行：
+
 ```zsh
 pnpm build
 APP_PORT=3000 NODE_ENV=production pnpm production
 ```
 
-## PM2 部署
+通过 PM2 部署：
+
 ```zsh
-pnpm pm2                  # 使用 pm2.config.json 启动/重启
-pnpm deploy-setup         # 首次远程部署环境初始化
-pnpm deploy               # 部署到生产
+pnpm pm2
+pnpm deploy-setup
+pnpm deploy
 ```
 
-## 常用脚本
-- `pnpm prisma:dev`: 开发环境迁移并生成客户端
-- `pnpm prisma:deploy`: 生产应用迁移
-- `pnpm type-check`: 类型检查（不输出文件）
-- `pnpm prettier` 与 `pnpm lint`：格式化与修复
-- `pnpm commit`: 使用 commitizen 规范提交
-- `pnpm husky-install`: 初始化 pre-commit 与 commit-msg 钩子
+## 许可证
 
-## 配置
-通过 `src/core/config/config.config.ts` 统一管理，在全局可注入 `ConfigService`。
-
-环境变量（示例）：
-- `APP_NAME`（如 `NestTemplate`）
-- `APP_PORT`（参考 `.env`）
-- `APP_PREFIX`（可选，如 `/api`）
-- `APP_VERSION`（如 `1` 或 `1,2`），用于 URI 版本控制
-- `NODE_ENV`（`development` | `production`）
-- `SWAGGER_ON`（`true|false`）、`SWAGGER_VERSION`（如 `1`）、`SWAGGER_PATH`（如 `/docs`）
-- `JWT_SECRET`、`JWT_EXPIRES_IN`、`JWT_REFRESH_SECRET`、`JWT_REFRESH_EXPIRES_IN`
-- `REDIS_URL`（缓存/限流）
-- Resend 邮件相关（参见 `src/core/mail/*`）
-
-## 架构概览
-- 入口：`src/main.ts` 创建 `NestExpressApplication` 并执行 `src/core/bootstrap.ts`
-- 启动：设置全局前缀、URI 版本、CORS、优雅停止、Express 插件、Swagger、Express 中间件
-- 全局守卫/拦截器/管道/过滤器通过 `src/app.module.ts` 内的 `APP_GUARD`/`APP_INTERCEPTOR`/`APP_PIPE`/`APP_FILTER` provider 注册
-- 模块：`src/modules/**`（如 `auth`、`user`、`file`）遵循 Nest 约定（控制器、服务、DTO、实体）
-- Prisma：`src/core/prisma/schema.prisma`，生成类型在 `generators/`；推荐仓储层（如 `modules/user/user.repository.ts`）
-- JWT：策略、守卫、装饰器在 `src/core/jwt/*`（`@SkipAuth()`、`@Roles('admin')`）
-- 队列：`src/core/queue/*`，处理器在 `processors/`，注册于 `workers.module.ts`
-- 日志：`src/core/logger/*` 输出至 `logs/**`
-
-## 使用示例
-```ts
-// 公共健康检查
-@SkipAuth()
-@Get('health')
-getHealth() { return { ok: true } }
-
-// 角色保护的端点
-@Roles('admin')
-@Get('admin/users')
-list() { return this.userService.listAdmins() }
-
-// 通过仓储使用 Prisma
-// modules/user/user.repository.ts
-this.prisma.user.findMany({ where: { active: true } })
-```
-
-## 开发约定
-- 仅使用 Express 适配与中间件，避免 Fastify API
-- 依赖 `src/app.module.ts` 的全局管线 provider，尽量减少每路由重复配置
-- 使用 `src/common/dto/{query,response}` 的共享 DTO 基类；响应由 `transform-response.interceptor.ts` 统一整形
-- 通过 `CacheService` 使用缓存；键常量位于 `src/common/constants/redis-keys.constants.ts`
-- BullMQ 处理器放置于 `src/core/queue/processors` 并在 `workers.module.ts` 注册
-- 邮件通过 `MailService` 与 `src/core/mail/templates/*.hbs` 模板
-
-### Worker 进程
-`WorkersModule` 会注册 BullMQ 的 `WorkerHost` 处理器。如果你希望 worker 独立进程运行，可以从 `AppModule` 移除 `WorkersModule`，并单独创建 worker 入口文件（或通过环境变量做条件导入）。
-
-## 许可
 MIT
