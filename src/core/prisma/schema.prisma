@@ -1,0 +1,38 @@
+generator client {
+  provider = "prisma-client"
+  output   = "./generators"
+}
+
+datasource db {
+  provider = "mysql"
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+/** 用户表 **/
+model User {
+  /** 用户ID **/
+  userId    BigInt   @id
+  /** 用户邮箱 **/
+  email     String   @unique @db.VarChar(254)
+  /** 用户密码 **/
+  password  String
+  /** 用户名 **/
+  username  String   @db.VarChar(11)
+  /** 用户头像 **/
+  avatar    String?
+  /** 用户角色 **/
+  role      Role     @default(USER)
+  /** 创建时间 **/
+  createdAt DateTime @default(now())
+  /** 更新时间 **/
+  updatedAt DateTime @default(now()) @updatedAt
+
+  @@index([username])
+  @@index([role])
+  @@index([createdAt])
+  @@index([role, createdAt])
+}

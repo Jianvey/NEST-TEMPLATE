@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json.schemastore.org/pm2-ecosystem.json",
+  "apps": [
+    {
+      "name": "NEST-TEMPLATE",
+      "interpreter": "node",
+      "script": "dist/main.js",
+      "cwd": "./",
+      "watch": false,
+      "exec_mode": "cluster",
+      "instances": "max",
+      "max_memory_restart": "2G",
+      "error_file": "./logs/pm2/error.log",
+      "out_file": "./logs/pm2/out.log",
+      "pid_file": "./logs/pm2/pid.log",
+      "merge_logs": true,
+      "log_date_format": "YYYY-MM-DD HH:mm Z",
+      "instance_var": "PM2_INSTANCE",
+      "env_development": {
+        "NODE_ENV": "development"
+      },
+      "env_production": {
+        "NODE_ENV": "production"
+      }
+    }
+  ]
+}

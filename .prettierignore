@@ -1,0 +1,10 @@
+node_modules
+dist
+/src/core/prisma/generators
+/src/core/prisma/migrations
+
+.husky
+.idea
+*.svg
+*.sh
+*.md

@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json.schemastore.org/prettierrc",
+  "tabWidth": 2,
+  "useTabs": false,
+  "printWidth": 120,
+  "singleAttributePerLine": false,
+  "semi": false,
+  "trailingComma": "all",
+  "arrowParens": "avoid",
+  "endOfLine": "lf",
+  "plugins": ["prettier-plugin-prisma"],
+  "overrides": [
+    {
+      "files": ["*.mjs", "*.cjs"],
+      "options": { "parser": "typescript" }
+    },
+    {
+      "files": ["*.json", "*.jsonc", ".prettierrc", ".commitlintrc", "tsconfig.json"],
+      "options": { "parser": "jsonc", "trailingComma": "none" }
+    }
+  ]
+}

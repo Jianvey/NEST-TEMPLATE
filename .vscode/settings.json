@@ -1,0 +1,31 @@
+{
+  "editor.formatOnSave": true,
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "files.associations": {
+    ".env": "env",
+    "*.env.development": "env",
+    "*.env.production": "env",
+    ".commitlintrc": "jsonc"
+  },
+  "[env]": {
+    "editor.defaultFormatter": "IronGeek.vscode-env"
+  },
+  "[prisma]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "cSpell.words": [
+    "agentkeepalive",
+    "autoincrement",
+    "bullmq",
+    "dtos",
+    "Fastify",
+    "geoip",
+    "mysqldump",
+    "nodenext",
+    "radash",
+    "redlock",
+    "remoteip",
+    "swcrc",
+    "unsign"
+  ]
+}

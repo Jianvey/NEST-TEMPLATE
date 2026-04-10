@@ -1,0 +1,12 @@
+ignoredBuiltDependencies:
+  - "@nestjs/core"
+  - "@prisma/engines"
+  - "@scarf/scarf"
+  - "@swc/core"
+  - bcrypt
+  - msgpackr-extract
+  - prisma
+  - sharp
+
+patchedDependencies:
+  redlock@5.0.0-beta.2: patches/redlock@5.0.0-beta.2.patch

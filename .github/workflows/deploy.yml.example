@@ -1,0 +1,60 @@
+name: Automated remote deployment
+
+on:
+  push:
+    branches: ["master"]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-master
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Deploy to remote server via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SERVER_KEY }}
+          port: ${{ secrets.SERVER_PORT }}
+          script_stop: true
+          command_timeout: 30m
+          script: |
+            set -e
+            cd ${{ secrets.REMOTE_PATH }}
+            git fetch --all
+            git checkout master
+            git reset --hard origin/master
+
+            # Load login shell path config, in case pnpm installed under user path
+            export HOME="$HOME"
+            if [ -f "$HOME/.bashrc" ]; then source "$HOME/.bashrc"; fi
+            if [ -f "$HOME/.profile" ]; then source "$HOME/.profile"; fi
+            if [ -f "$HOME/.zshrc" ]; then source "$HOME/.zshrc"; fi
+            export PATH="$HOME/.local/share/pnpm:/root/.local/bin:/usr/local/bin:/usr/bin:/bin:$PATH"
+
+            echo "PATH=$PATH"
+            echo "which pnpm: $(command -v pnpm || true)"
+            echo "pnpm version: $(pnpm -v || true)"
+
+            if ! command -v pnpm >/dev/null 2>&1; then
+              echo "pnpm not found; please install pnpm and make sure it is in PATH" >&2
+              exit 1
+            fi
+
+            if [ ! -x "/usr/bin/node" ]; then
+              echo "/usr/bin/node not found, installing Node.js from package manager"
+              apt-get update -y
+              apt-get install -y nodejs
+            fi
+            echo "node path: $(command -v node || true)"
+            echo "node version: $(node -v || true)"
+
+            pnpm install --frozen-lockfile
+            pnpm build
+            pnpm prisma:deploy
+            pnpm pm2
