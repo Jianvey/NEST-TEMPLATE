@@ -2,7 +2,7 @@
   "name": "nest-template",
   "author": "Jianvey <Jianvey@outlook.com> (https://github.com/Jianvey)",
   "engines": {
-    "node": ">=24.14.0"
+    "node": ">=24.16.0"
   },
   "scripts": {
     "start": "nest start --watch",
@@ -19,7 +19,6 @@
     "lint": "eslint --fix",
     "prettier": "prettier --write . --ignore-unknown",
     "commit": "git-cz",
-    "husky-install": "npx husky init && printf 'npm run type-check || exit 1\\n' > .husky/pre-commit && echo \"npx --no -- commitlint --edit \\$1\" > .husky/commit-msg",
     "prepare": "husky"
   },
   "lint-staged": {

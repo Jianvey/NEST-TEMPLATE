@@ -1,1 +1,6 @@
-npm run type-check || exit 1
+#!/bin/sh
+. "$(dirname "$0")/_/husky.sh"
+
+pnpm run lint
+pnpm run type-check
+pnpm run prettier
